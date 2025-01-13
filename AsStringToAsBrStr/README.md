@@ -1,20 +1,19 @@
-# AsMath to AsBrMath Migration Utility
+# Replace AsString and AsWStr Utility
 
-A Python script designed to assist in migrating Automation Studio 4 projects by replacing obsolete AsMath functions and constants with their AsBrMath equivalents. This tool ensures compatibility and alignment with Automation Studio 6 standards.
+A Python script designed to assist in migrating and refactoring Automation Studio project files by replacing deprecated AsString and AsWStr functions and constants with their modern AsBr equivalents.
 
 ## Features
 
 Automatically detects and replaces:
-- AsMath functions with AsBrMath functions.
-- AsMath constants with AsBrMath constants.
-- Validates the presence of the AsMath library in the project.
-- Ensures the integrity of project files by computing hashes before and after modifications.
-- Provides a summary of changes for transparency.
+- Detects and replaces deprecated AsString and AsWStr functions with AsBr equivalents.
+- Replaces constants related to AsWStr with updated AsBr constants.
+- Outputs a summary of replacements made across all project files.
 
 ## Prerequisites
 
 - Python 3.6 or later.
 - A valid Automation Studio project directory.
+- The script assumes the project structure includes a Logical/Libraries/Package.pkg file.
 
 ## Usage
 
@@ -25,18 +24,18 @@ Clone the repository and navigate to the script directory:
 
 Run the script by providing the path to your Automation Studio project directory:
 ```bash
-python AsMathToAsBrMath.py <path-to-your-project>
+python AsStringToAsBrStr.py <path-to-your-project>
 ```
 
 #### Example
 To scan a specific project directory:
 ```bash
-python AsMathToAsBrMath.py C:\path\to\your\AutomationStudioProject
+python AsStringToAsBrStr.py C:\path\to\your\AutomationStudioProject
 ```
 
 To scan the current directory where the script is located:
 ```bash
-python AsMathToAsBrMath.py
+python AsStringToAsBrStr.py
 ```
 
 #### Output
@@ -44,9 +43,8 @@ python AsMathToAsBrMath.py
 - Modified files are overwritten in place.
 
 ## Key Features Explained
-- Function Replacement: Replaces functions like atan2 with brmatan2, ceil with brmceil, and others based on the provided mapping.
-- Constant Replacement: Replaces constants such as amPI with brmPI and amE with brmE.
-- Hash Validation: Ensures no unintended changes are introduced by verifying file hashes.
+- Function Mapping: The script replaces old AsString and AsWStr functions with their modern AsBr equivalents. For example: ftoa is replaced by brsftoa.
+- Constant Replacement: Replaces constants such as U8toUC with brwU8toUC.
 
 ## Limitations
 - Only processes .st files under the Logical directory.
