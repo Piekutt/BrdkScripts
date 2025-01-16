@@ -555,7 +555,7 @@ def process_var_typ_file(file_path, patterns):
 
 def process_st_c_file(file_path, patterns):
     """
-    Processes a .st or .c file to find matches for the given patterns.
+    Processes a .st, .c, or .cpp file to find matches for the given patterns.
 
     Args:
         file_path (str): Path to the file.
@@ -565,11 +565,22 @@ def process_st_c_file(file_path, patterns):
         list: Matches found in the file.
     """
     results = []
+    matched_files = set()  # To store file paths and ensure uniqueness
+
     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
         content = f.read()
+        # Search specifically for strcpy occurrences
+        matches = re.findall(r'\bstrcpy\s*\(\s*([^\)]+)\s*,\s*([^\)]+)\s*\)', content)
+        if matches and file_path not in matched_files:
+            results.append(('strcpy', 'Deprecated function', file_path))  # Add specific message for strcpy
+            matched_files.add(file_path)  # Add the file to the set
+
+        # Check for other patterns if necessary
         for pattern, reason in patterns.items():
-            if re.search(rf'\b{re.escape(pattern)}\b', content):
+            if re.search(rf'\b{re.escape(pattern)}\b', content) and file_path not in matched_files:
                 results.append((pattern, reason, file_path))
+                matched_files.add(file_path)  # Ensure file is added only once
+                
     return results
 
 
@@ -705,13 +716,6 @@ def check_files_for_compatibility(directory, file_patterns):
     return incompatible_files
 
 
-import os
-import sys
-import re
-import concurrent.futures
-import time
-import fnmatch
-
 # Update main function to handle project directory input
 def main():
     """
@@ -721,6 +725,14 @@ def main():
 
     # Check if a project path is provided
     project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+
+    # Check if valid project path
+    if not os.path.exists(project_path):
+        print(f"Error: The provided project path does not exist: {project_path}")
+        print("\nEnsure the path is correct and the project folder exists.")
+        print("\nIf the path contains spaces, make sure to wrap it in quotes, like this:")
+        print('   python AS6_migration.py "C:\\path\\to\\your\\project"')
+        sys.exit(1)
 
     # Check if .apj file exists in the provided path
     apj_files = [file for file in os.listdir(project_path) if file.endswith(".apj")]
@@ -757,7 +769,7 @@ def main():
         )
 
         invalid_st_c_files = scan_files_parallel(
-            os.path.join(project_path, "Logical"), [".st", ".c"], process_st_c_file, obsolete_functions
+            os.path.join(project_path, "Logical"), [".st", ".c", ".cpp"], process_st_c_file, obsolete_functions
         )
 
         hardware_results = scan_files_parallel(
@@ -823,7 +835,7 @@ def main():
         else:
             log("- None")
 
-        log("\n\nThe following invalid functions were found in .st and .c files:")
+        log("\n\nThe following invalid functions were found in .st, .c and .cpp files:")
         if invalid_st_c_files:
             for function, reason, file_path in invalid_st_c_files:
                 log(f"- {function}: {reason} (Found in: {file_path})")
