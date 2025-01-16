@@ -76,7 +76,7 @@ def main():
         print(f"Error: The provided project path does not exist: {project_path}")
         print("\nEnsure the path is correct and the project folder exists.")
         print("\nIf the path contains spaces, make sure to wrap it in quotes, like this:")
-        print('   python AS6_migration.py "C:\\path\\to\\your\\project"')
+        print('   python AsStringToAsBrStr.py "C:\\path\\to\\your\\project"')
         sys.exit(1)
 
     # Check if .apj file exists in the provided path
@@ -148,7 +148,7 @@ def main():
     for root, _, files in os.walk(logical_path):
         for file in files:
             # Add ".c" and ".cpp" to the list of file extensions to process
-            if file.endswith((".st", ".c", ".cpp", ".hpp")):
+            if file.endswith((".st")):
                 file_path = os.path.join(root, file)
                 function_replacements, constant_replacements, changed = replace_functions_and_constants(
                     file_path, function_mapping, constant_mapping
