@@ -71,6 +71,14 @@ def check_for_library(project_path, library_names):
 def main():
     project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
+    # Check if valid project path
+    if not os.path.exists(project_path):
+        print(f"Error: The provided project path does not exist: {project_path}")
+        print("\nEnsure the path is correct and the project folder exists.")
+        print("\nIf the path contains spaces, make sure to wrap it in quotes, like this:")
+        print('   python AS6_migration.py "C:\\path\\to\\your\\project"')
+        sys.exit(1)
+
     # Check if .apj file exists in the provided path
     apj_files = [file for file in os.listdir(project_path) if file.endswith(".apj")]
     if not apj_files:
@@ -136,9 +144,11 @@ def main():
     total_constant_replacements = 0
     total_files_changed = 0
 
+    # Loop through the files in the "Logical" directory and process .st, .c, and .cpp files
     for root, _, files in os.walk(logical_path):
         for file in files:
-            if file.endswith(".st"):
+            # Add ".c" and ".cpp" to the list of file extensions to process
+            if file.endswith((".st", ".c", ".cpp", ".hpp")):
                 file_path = os.path.join(root, file)
                 function_replacements, constant_replacements, changed = replace_functions_and_constants(
                     file_path, function_mapping, constant_mapping
