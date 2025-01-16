@@ -78,11 +78,19 @@ def main():
     """
     project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
+    # Check if valid project path
+    if not os.path.exists(project_path):
+        print(f"Error: The provided project path does not exist: {project_path}")
+        print("\nEnsure the path is correct and the project folder exists.")
+        print("\nIf the path contains spaces, make sure to wrap it in quotes, like this:")
+        print('   python AsMathToAsBrMath.py "C:\\path\\to\\your\\project"')
+        sys.exit(1)
+
     # Check if .apj file exists in the provided path
     apj_files = [file for file in os.listdir(project_path) if file.endswith(".apj")]
     if not apj_files:
         print(f"Error: No .apj file found in the provided path: {project_path}")
-        print("\nPlease specify a valid Automation Studio 4 project path.")
+        print("\nPlease specify a valid Automation Studio project path.")
         sys.exit(1)
 
     print(f"Project path validated: {project_path}")
@@ -155,7 +163,7 @@ def main():
 
     for root, _, files in os.walk(logical_path):
         for file in files:
-            if file.endswith(".st"):
+            if file.endswith((".st", ".c", ".cpp", ".hpp")):
                 file_path = os.path.join(root, file)
                 function_replacements, constant_replacements, changed = replace_functions_and_constants(
                     file_path, function_mapping, constant_mapping
