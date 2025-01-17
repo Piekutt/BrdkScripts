@@ -673,6 +673,33 @@ def process_lby_file(file_path, patterns):
                     results.append((library_name, dependency, reason, file_path))
     return results
 
+def process_c_cpp_hpp_includes_file(file_path, patterns):
+    """
+    Processes a C, C++, or header (.hpp) file to find obsolete dependencies in #include statements.
+
+    Args:
+        file_path (str): Path to the file.
+        patterns (dict): Dictionary of obsolete libraries with reasons.
+
+    Returns:
+        list: Matches found in the file in the format (library_name, reason, file_path).
+    """
+    results = []
+    include_pattern = re.compile(r'#include\s+[<"]([^">]+)[">]')
+
+    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        content = f.readlines()
+
+        for line in content:
+            match = include_pattern.search(line)
+            if match:
+                included_library = match.group(1).lower()  # Normalize case
+                for pattern, reason in patterns.items():
+                    if included_library == f"{pattern.lower()}.h":
+                        results.append((pattern, reason, file_path))
+    
+    return results
+
 # Function to process libraries requiring reinstallation
 def process_reinstall_libraries(file_path, patterns):
     """
@@ -824,6 +851,10 @@ def main():
                 os.path.join(project_path, "Logical", "Libraries"), [".lby"], process_lby_file, obsolete_dict
             )
 
+            c_include_dependency_results = scan_files_parallel(
+                os.path.join(project_path, "Logical"), [".c", ".cpp", ".hpp"], process_c_cpp_hpp_includes_file, obsolete_dict
+            )
+
             # Store the list of files containing deprecated string functions
             deprecated_string_files = check_deprecated_string_functions(
                 os.path.join(project_path, "Logical"),
@@ -897,12 +928,19 @@ def main():
             else:
                 log("- None")
 
-            log("\n\nThe following obsolete dependencies were found in .lby files:")
-            if lby_dependency_results:
-                for library_name, dependency, reason, file_path in lby_dependency_results:
-                    log(f"- {library_name}: Has dependency to {dependency} ({reason}) (Found in: {file_path})")
+            # Convert .lby results to match the (library_name, reason, file_path) format
+            normalized_lby_results = [(lib, f"Dependency on {dep}: {reason}", path) for lib, dep, reason, path in lby_dependency_results]
+
+            # Merge results from .lby and C/C++/HPP include dependencies
+            all_dependency_results = normalized_lby_results + c_include_dependency_results
+
+            log("\n\nThe following obsolete dependencies were found in .lby, .c, .cpp, and .hpp files:")
+            if all_dependency_results:
+                for library_name, reason, file_path in all_dependency_results:
+                    log(f"- {library_name}: {reason} (Found in: {file_path})")
             else:
                 log("- None")
+
 
             log("\n\nThe following invalid function blocks were found in .var and .typ files:")
             if invalid_var_typ_files:
