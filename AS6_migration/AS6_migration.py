@@ -569,11 +569,6 @@ def process_st_c_file(file_path, patterns):
 
     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
         content = f.read()
-        # Search specifically for strcpy occurrences
-        matches = re.findall(r'\bstrcpy\s*\(\s*([^\)]+)\s*,\s*([^\)]+)\s*\)', content)
-        if matches and file_path not in matched_files:
-            results.append(('strcpy', 'Deprecated function', file_path))  # Add specific message for strcpy
-            matched_files.add(file_path)  # Add the file to the set
 
         # Check for other patterns if necessary
         for pattern, reason in patterns.items():
@@ -583,6 +578,52 @@ def process_st_c_file(file_path, patterns):
                 
     return results
 
+def check_deprecated_string_functions(root_dir, extensions, deprecated_functions):
+    """
+    Scans all .st files in the project directory for deprecated string functions.
+
+    Returns:
+        list: A list of file paths where deprecated string functions were found.
+    """
+    deprecated_files = []
+
+    for root, _, files in os.walk(root_dir):
+        for file in files:
+            if any(file.endswith(ext) for ext in extensions):
+                file_path = os.path.join(root, file)
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    if any(re.search(rf'\b{func}\b', content) for func in deprecated_functions):
+                        deprecated_files.append(file_path)
+
+    return deprecated_files
+
+
+def check_deprecated_math_functions(root_dir, extensions, deprecated_functions):
+    """
+    Scans files for deprecated math function calls.
+    
+    Args:
+        root_dir (str): The root directory to search in.
+        extensions (list): List of file extensions to check.
+        deprecated_functions (set): Set of deprecated math functions.
+
+    Returns:
+        list: A list of file paths where deprecated math functions were found.
+    """
+    deprecated_files = []
+    function_pattern = re.compile(r'\b(' + '|'.join(deprecated_functions) + r')\s*\(')  # Match function names only when followed by '('
+
+    for root, _, files in os.walk(root_dir):
+        for file in files:
+            if any(file.endswith(ext) for ext in extensions):
+                file_path = os.path.join(root, file)
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+                    if function_pattern.search(content):  # Only matches function calls
+                        deprecated_files.append(file_path)
+
+    return deprecated_files
 
 def process_hw_file(file_path, hardware_dict):
     """
@@ -715,16 +756,17 @@ def check_files_for_compatibility(directory, file_patterns):
 
     return incompatible_files
 
-
-# Update main function to handle project directory input
+# Update main function to handle project directory input and optional debug flag
 def main():
     """
     Main function to scan for obsolete libraries, function blocks, functions, and unsupported hardware.
     Outputs the results to a file as well as the console.
     """
+    # Check if debug flag is provided
+    debug_mode = "--debug" in sys.argv
 
     # Check if a project path is provided
-    project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    project_path = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else os.getcwd()
 
     # Check if valid project path
     if not os.path.exists(project_path):
@@ -751,100 +793,175 @@ def main():
 
     output_file = os.path.join(project_path, "AS6_migration_result.txt")
     with open(output_file, "w", encoding="utf-8") as file:
-        def log(message):
-            print(message)  # Print to console
-            file.write(message + "\n")  # Write to file
+        try:
+            def log(message, log_file=file):
+                print(message)  # Print to console
+                log_file.write(message + "\n")  # Write to file
+                log_file.flush()  # Ensure data is written immediately
 
-        log("Scanning started... Please wait while the script analyzes your project files.\n")
+            log("Scanning started... Please wait while the script analyzes your project files.\n", file)
 
-        start_time = time.time()
+            start_time = time.time()
 
-        # Use project_path as the root directory for scanning
-        invalid_pkg_files = scan_files_parallel(
-            os.path.join(project_path, "Logical", "Libraries"), [".pkg"], process_pkg_file, obsolete_dict
-        )
+            # Use project_path as the root directory for scanning
+            invalid_pkg_files = scan_files_parallel(
+                os.path.join(project_path, "Logical", "Libraries"), [".pkg"], process_pkg_file, obsolete_dict
+            )
 
-        invalid_var_typ_files = scan_files_parallel(
-            os.path.join(project_path, "Logical"), [".var", ".typ"], process_var_file, obsolete_function_blocks
-        )
+            invalid_var_typ_files = scan_files_parallel(
+                os.path.join(project_path, "Logical"), [".var", ".typ"], process_var_file, obsolete_function_blocks
+            )
 
-        invalid_st_c_files = scan_files_parallel(
-            os.path.join(project_path, "Logical"), [".st", ".c", ".cpp"], process_st_c_file, obsolete_functions
-        )
+            invalid_st_c_files = scan_files_parallel(
+                os.path.join(project_path, "Logical"), [".st", ".c", ".cpp"], process_st_c_file, obsolete_functions
+            )
 
-        hardware_results = scan_files_parallel(
-            os.path.join(project_path, "Physical"), [".hw"], process_hw_file, unsupported_hardware
-        )
+            hardware_results = scan_files_parallel(
+                os.path.join(project_path, "Physical"), [".hw"], process_hw_file, unsupported_hardware
+            )
 
-        lby_dependency_results = scan_files_parallel(
-            os.path.join(project_path, "Logical", "Libraries"), [".lby"], process_lby_file, obsolete_dict
-        )
+            lby_dependency_results = scan_files_parallel(
+                os.path.join(project_path, "Logical", "Libraries"), [".lby"], process_lby_file, obsolete_dict
+            )
 
-        log("\n\nChecking project and hardware files for compatibility...")
-        file_patterns = ["*.apj", "*.hw"]
-        compatibility_results = check_files_for_compatibility(project_path, file_patterns)
-        if compatibility_results:
-            for file_path, issue in compatibility_results:
-                log(f"- {file_path}: {issue}")
-            log("\nPlease ensure these files are saved at least once with Automation Studio 4.12.")
-        else:
-            log("- All project and hardware files are valid.")
+            # Store the list of files containing deprecated string functions
+            deprecated_string_files = check_deprecated_string_functions(
+                os.path.join(project_path, "Logical"),
+                [".st"],
+                {"ftoa", "atof", "itoa", "atoi", "memset", "memcpy", "memmove", "memcmp",
+                "strcat", "strlen", "strcpy", "strcmp", "wcscat", "wcschr", "wcscmp",
+                "wcsconv", "wcscpy", "wcslen", "wcsncat", "wcsncmp", "wcsncpy", "wcsrchr", "wcsset"}
+            )
 
-        log("\n\nChecking for misplaced .uad files...")
-        uad_results = check_uad_files(os.path.join(project_path, "Physical"))
-        if uad_results:
-            log("The following .uad files are not located in the required Connectivity/OpcUA directory:")
-            for file_path in uad_results:
-                log(f"- {file_path}")
-            log("\nPlease create (via AS412) and move these files to the required directory: Connectivity/OpcUA.")
-        else:
-            log("- All .uad files are in the correct location.")
+            # Ensure we have a valid list, even if no deprecated functions are found
+            if not isinstance(deprecated_string_files, list):
+                deprecated_string_files = []  # Fallback to an empty list
 
-        log("\n\nThe following unsupported hardware were found:")
-        if hardware_results:
-            grouped_results = {}
-            for hardware_id, reason, file_path in hardware_results:
-                config_name = os.path.basename(os.path.dirname(file_path))
-                grouped_results.setdefault(config_name, set()).add((hardware_id, reason))
-            
-            for config_name, entries in grouped_results.items():
-                log(f"\nHardware configuration: {config_name}")
-                for hardware_id, reason in sorted(entries):
-                    log(f"- {hardware_id}: {reason}")
-        else:
-            log("- None")
+            # Boolean flag to indicate whether deprecated string functions were found
+            found_deprecated_string = bool(deprecated_string_files)
 
-        log("\n\nThe following invalid libraries were found in .pkg files:")
-        if invalid_pkg_files:
-            for library, reason, file_path in invalid_pkg_files:
-                log(f"- {library}: {reason} (Found in: {file_path})")
-        else:
-            log("- None")
 
-        log("\n\nThe following obsolete dependencies were found in .lby files:")
-        if lby_dependency_results:
-            for library_name, dependency, reason, file_path in lby_dependency_results:
-                log(f"- {library_name}: Has dependency to {dependency} ({reason}) (Found in: {file_path})")
-        else:
-            log("- None")
+            # Store the list of files containing deprecated math functions
+            deprecated_math_files = check_deprecated_math_functions(
+                os.path.join(project_path, "Logical"),
+                [".st"],
+                {"atan2", "ceil", "cosh", "floor", "fmod", "frexp", "ldexp", "modf",
+                "pow", "sinh", "tanh"}
+            )
 
-        log("\n\nThe following invalid function blocks were found in .var and .typ files:")
-        if invalid_var_typ_files:
-            for block, reason, file_path in invalid_var_typ_files:
-                log(f"- {block}: {reason} (Found in: {file_path})")
-        else:
-            log("- None")
+            # Ensure we have a valid list, even if no deprecated functions are found
+            if not isinstance(deprecated_math_files, list):
+                deprecated_math_files = []  # Fallback to an empty list
 
-        log("\n\nThe following invalid functions were found in .st, .c and .cpp files:")
-        if invalid_st_c_files:
-            for function, reason, file_path in invalid_st_c_files:
-                log(f"- {function}: {reason} (Found in: {file_path})")
-        else:
-            log("- None")
-        
-        end_time = time.time()
-        log(f"\n\nScanning completed successfully in {end_time - start_time:.2f} seconds.")
-        
+            # Boolean flag to indicate whether deprecated math functions were found
+            found_deprecated_math = bool(deprecated_math_files)
+
+            log("\n\nChecking project and hardware files for compatibility...")
+            file_patterns = ["*.apj", "*.hw"]
+            compatibility_results = check_files_for_compatibility(project_path, file_patterns)
+            if compatibility_results:
+                for file_path, issue in compatibility_results:
+                    log(f"- {file_path}: {issue}")
+                log("\nPlease ensure these files are saved at least once with Automation Studio 4.12.")
+            else:
+                log("- All project and hardware files are valid.")
+
+            log("\n\nChecking for misplaced .uad files...")
+            uad_results = check_uad_files(os.path.join(project_path, "Physical"))
+            if uad_results:
+                log("The following .uad files are not located in the required Connectivity/OpcUA directory:")
+                for file_path in uad_results:
+                    log(f"- {file_path}")
+                log("\nPlease create (via AS412) and move these files to the required directory: Connectivity/OpcUA.")
+            else:
+                log("- All .uad files are in the correct location.")
+
+            log("\n\nThe following unsupported hardware were found:")
+            if hardware_results:
+                grouped_results = {}
+                for hardware_id, reason, file_path in hardware_results:
+                    config_name = os.path.basename(os.path.dirname(file_path))
+                    grouped_results.setdefault(config_name, set()).add((hardware_id, reason))
+
+                for config_name, entries in grouped_results.items():
+                    log(f"\nHardware configuration: {config_name}")
+                    for hardware_id, reason in sorted(entries):
+                        log(f"- {hardware_id}: {reason}")
+            else:
+                log("- None")
+
+            log("\n\nThe following invalid libraries were found in .pkg files:")
+            if invalid_pkg_files:
+                for library, reason, file_path in invalid_pkg_files:
+                    log(f"- {library}: {reason} (Found in: {file_path})")
+            else:
+                log("- None")
+
+            log("\n\nThe following obsolete dependencies were found in .lby files:")
+            if lby_dependency_results:
+                for library_name, dependency, reason, file_path in lby_dependency_results:
+                    log(f"- {library_name}: Has dependency to {dependency} ({reason}) (Found in: {file_path})")
+            else:
+                log("- None")
+
+            log("\n\nThe following invalid function blocks were found in .var and .typ files:")
+            if invalid_var_typ_files:
+                for block, reason, file_path in invalid_var_typ_files:
+                    log(f"- {block}: {reason} (Found in: {file_path})")
+            else:
+                log("- None")
+
+            log("\n\nThe following invalid functions were found in .st, .c and .cpp files:")
+            found_any_invalid_functions = False
+
+            if invalid_st_c_files:
+                for function, reason, file_path in invalid_st_c_files:
+                    log(f"- {function}: {reason} (Found in: {file_path})")
+                found_any_invalid_functions = True
+
+            if found_deprecated_string:
+                log("- Deprecated AsString functions detected in the project: Consider using AsStringToAsBrStr.py to replace them.")
+                found_any_invalid_functions = True
+
+                # Debug: Print where the deprecated string functions were found only if --debug is enabled
+                if debug_mode and deprecated_string_files:
+                    print("\n[DEBUG] Deprecated AsString functions detected in the following files:")
+                    for file in deprecated_string_files:
+                        print(f"[DEBUG] - {file}")
+
+
+            if found_deprecated_math:
+                log("- Deprecated AsMath functions detected in the project: Consider using AsMathToAsBrMath.py to replace them.")
+                found_any_invalid_functions = True
+
+                # Debug: Print where the deprecated math functions were found only if --debug is enabled
+                if debug_mode and found_deprecated_math:
+                    print("\n[DEBUG] Deprecated AsMath functions detected in the following files:")
+                    for file in deprecated_math_files:
+                        print(f"[DEBUG] - {file}")
+
+
+            if not found_any_invalid_functions:
+                log("- None")
+
+            end_time = time.time()
+            log(f"\n\nScanning completed successfully in {end_time - start_time:.2f} seconds.")
+
+        except Exception as e:
+            error_message = f"\n[ERROR] An unexpected error occurred: {str(e)}"
+
+            # Print error to console
+            print(error_message)
+
+            # Ensure log file is open before writing
+            try:
+                with open(output_file, "a", encoding="utf-8") as error_log:
+                    error_log.write(error_message + "\n")
+            except Exception as log_error:
+                print(f"[ERROR] Failed to write error to log file: {log_error}")
+
+
+
     print(f"\nResults have been saved to {output_file}\n")
 
 if __name__ == "__main__":
