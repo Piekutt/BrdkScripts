@@ -81,7 +81,8 @@ reinstall_libraries = {
     "MTSystem": "Must be deleted and re-added with a version >= 6.0",
     "MTTemp": "Must be deleted and re-added with a version >= 6.0",
     "MTTypes": "Must be deleted and re-added with a version >= 6.0",
-    "MTWinder": "Must be deleted and re-added with a version >= 6.0"
+    "MTWinder": "Must be deleted and re-added with a version >= 6.0",
+    "MTLinAlg": "Must be deleted and re-added with a version >= 6.0"
 }
 
 # Hardcoded list of obsolete function blocks with reasons
@@ -112,6 +113,7 @@ obsolete_function_blocks = {
     "CfgSetSntpClient": "Has been replaced by CfgSetNtpClient()",
     "CfgGetSntpcData": "Has been replaced by CfgGetNtpcData()",
     "CfgGetSntpsData": "Has been replaced by CfgGetNtpsData()",
+    "MpAlarmXAcknowledgeAll": "This function block has been removed. Its functionality is now available as a command within the MpAlarmXCore function block",
     "MpAlarmXConfigMapping": "No longer supported since version 6.0. Use MpComConfigManager or MpComConfigBasic/Advanced instead.",
     "MpAlarmXConfigAlarm": "No longer supported since version 6.0. Use MpComConfigManager or MpComConfigBasic/Advanced instead.",
     "MpAuditTrailConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
@@ -127,7 +129,19 @@ obsolete_function_blocks = {
     "MpFileManagerConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
     "MpDatabaseCore": "The functionality of the function block is completely replaced by MpDatabaseQuery",
     "MpJ1939Generic": "The function block no longer exists with 6.x. The functionality of the function block is completely applied with the MpJ1939Generic configuration. The associated data types have also been removed since they are no longer required.",
-    "MpPackMLCore": "The function block was removed with 6.x. The function is completely applied with the MpPackMLStandaloneUnit configuration. The associated data types of the function block have also been removed as they are no longer required."
+    "MpPackMLCore": "The function block was removed with 6.x. The function is completely applied with the MpPackMLStandaloneUnit configuration. The associated data types of the function block have also been removed as they are no longer required.",
+    "UA_GetNamespace": "To establish conformity with the client specification, the block has been renamed UA_NamespaceGetIndex. In addition, NamespaceUri is now case sensitive to comply with the OPC UA specification.",
+    "UA_GetNamespaceIndex": "To establish conformity with the client specification, the block has been renamed UA_NamespaceGetIndex. In addition, NamespaceUri is now case sensitive to comply with the OPC UA specification.",
+    "UA_MonitoredItemAdd": "The type of application is fundamentally different from the way the new list blocks must be applied, which is why the decision was made to discontinue the blocks. UA_MonitoredItemAddList serve as functional replacements",
+    "UA_MonitoredItemRemove": "The type of application is fundamentally different from the way the new list blocks must be applied, which is why the decision was made to discontinue the blocks. UA_MonitoredItemRemoveList serve as functional replacements",
+    "UA_MonitoredItemOperate": "The type of application is fundamentally different from the way the new list blocks must be applied, which is why the decision was made to discontinue the blocks. UA_MonitoredItemOperateList serve as functional replacements",
+    "MC_BR_CamAutomatGetPar_AcpAx": "Is removed since 'Cam automat common' and 'Cam automat ACOPOS' are standardized.",
+    "MC_BR_CamAutomatSetPar_AcpAx": "Is removed since 'Cam automat common' and 'Cam automat ACOPOS' are standardized.",
+    "MC_BR_AsmSegGrpPowerOn_AcpTrak": "Assembly function blocks MC_BR_AsmPowerOn_AcpTrak have been extended to include advanced parameter 'SegmentGroup'. As a result, MC_BR_AsmSegGrpPowerOn_AcpTrak became obsolete and was removed.",
+    "MC_BR_AsmSegGrpPowerOff_AcpTrak": "Assembly function blocks MC_BR_AsmPowerOff_AcpTrak have been extended to include advanced parameter 'SegmentGroup'. As a result, MC_BR_AsmSegGrpPowerOff_AcpTrak became obsolete and was removed.",
+    "MC_BR_SecAddShWithMov_AcpTrak": "The behavior and features of function block MC_BR_SecAddShWithMov_AcpTrak have been applied to MC_BR_SecAddShuttle_AcpTrak. As a result, MC_BR_SecAddShWithMov_AcpTrak became obsolete and was removed.",
+    "MC_BR_AsmGetShuttleSel_AcpTrak": "The behavior and features of function block MC_BR_AsmGetShuttleSel_AcpTrak have been applied to MC_BR_AsmGetShuttle_AcpTrak. As a result, MC_BR_AsmGetShuttleSel_AcpTrak became obsolete and was removed.",
+    "MC_BR_SecGetShuttleSel_AcpTrak": "The behavior and features of function block MC_BR_SecGetShuttleSel_AcpTrak have been applied to MC_BR_SecGetShuttle_AcpTrak. As a result, MC_BR_SecGetShuttleSel_AcpTrak became obsolete and was removed.",
      # Add more function blocks as needed
 }
 
@@ -188,7 +202,6 @@ obsolete_functions = {
     "UT_recmsg": "Supports SG3 only",   # All functions starting with UT_
     "UT_freemsg": "Supports SG3 only",   # All functions starting with UT_
     "MpAlarmXClearHistory": "This function has been removed. Its functionality is now available as a command within the MpAlarmXHistory function block",
-    "MpAlarmXAcknowledgeAll": "This function has been removed. Its functionality is now available as a command within the MpAlarmXCore function block",
     "MpUserXAccessRight": "The function no longer exists. The rights are handled with 6.x via OPC UA",
     "MpAuditClearBuffer": "The function no longer exists with 6.x. The audit buffer can now be deleted using command 'Clear' in MpAuditTrail",
     "MpComLink": "The functions were used in 5.x to create a hierarchy. With 6.0, the MpComGroup configuration can be used for this purpose",
@@ -388,7 +401,7 @@ unsupported_hardware = {
         "80CIS.PS0-2", "80CIS.PS0-5"
     ],
     "ACOPOS - No longer supported with AS 6.x": [
-        "8AC110.60-2", "8AC110.60-3", "8AC112.60-1", "8AC122.60-2"
+        "8AC110.60-2", "8AC110.60-3", "8AC112.60-1", "8AC122.60-2", "8BAC0122.000-1", "8BAC0120.000-1", "8BVIxxxxxxxS.000-1"
     ],
     "ACOPOSinverter - No longer supported with AS 6.x": [
         "8I44xxxxxxx.xxx-1", "8I64xxxxxxx.00x-1", "8I74xxxxxxx.01P-1",
@@ -847,6 +860,10 @@ def main():
             start_time = time.time()
 
             # Use project_path as the root directory for scanning
+            reinstall_library_results = scan_files_parallel(
+                os.path.join(project_path, "Logical", "Libraries"), [".pkg"], process_reinstall_libraries, reinstall_libraries
+            )
+            
             invalid_pkg_files = scan_files_parallel(
                 os.path.join(project_path, "Logical", "Libraries"), [".pkg"], process_pkg_file, obsolete_dict
             )
@@ -940,6 +957,13 @@ def main():
             log("\n\nThe following invalid libraries were found in .pkg files:")
             if invalid_pkg_files:
                 for library, reason, file_path in invalid_pkg_files:
+                    log(f"- {library}: {reason} (Found in: {file_path})")
+            else:
+                log("- None")
+
+            log("\n\nThe following libraries must be deleted and re-added with a version >= 6.0:")
+            if reinstall_library_results:
+                for library, reason, file_path in reinstall_library_results:
                     log(f"- {library}: {reason} (Found in: {file_path})")
             else:
                 log("- None")
