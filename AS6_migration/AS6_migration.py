@@ -57,12 +57,18 @@ obsolete_dict = {
     "LoopCont": "This library has been replaced by the mapp Temperature and mapp Control Tools libraries",
     "AsHydCon": "This library has been replaced by the mapp Hydraulics and mapp Control Tools libraries",
     "ArAutoId": "Reason for discontinuation not indicated",
-    "MpWebXs": "The library is not supported in Automation Studio 6.1. Recommended replacement: mapp Cockpit",
+    "MpWebXs": "No longer available. Various mapp Services components are now integrated into the mapp Cockpit to support the development and commissioning of machines",
     "MTTension": "The library is not supported in Automation Studio 6.1",
     "ArPubSubD": "Recommended replacement: FxPubSubD",
-    "MpAlarm": "Recommended replacement: MpAlarmX",
-    "MpUser": "Recommended replacement: MpUserX",
-    "MTIdent": "Recommended replacement: mapp Control Tools"
+    "MpAlarm": "Replaced by successor mapp AlarmX",
+    "MpUser": "Replaced by successor mapp UserX",
+    "MTIdent": "Recommended replacement: mapp Control Tools",
+    "MpEnergy": "Temporarily removed. The component did not meet customer use cases. A reassessment of energy monitoring is underway to determine the future direction and improvements",
+    "MpTweet": "Temporarily removed due to limited use cases. Alternative communication methods are currently being researched, and this function may return in a different form",
+    "MpOee": "Temporarily removed due to low demand. The functionality of these components is currently being reviewed",
+    "MpAssetInt": "Temporarily removed due to low demand. The functionality of these components is currently being reviewed - check https://github.com/br-automation-com/mappAssetIntEx",
+    "BrAbbRws": "Not supported right now but might be in the future",
+    "AsDb": "This library is no longer available from operating system version AR 6.1."
 }
 
 # Libraries that must be deleted and re-added with a version >= 6.0
@@ -110,6 +116,7 @@ obsolete_function_blocks = {
     "MpAlarmXConfigAlarm": "No longer supported since version 6.0. Use MpComConfigManager or MpComConfigBasic/Advanced instead.",
     "MpAuditTrailConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
     "MpDataRecorderConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
+    "MpUserXConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
     "MpUserXLoginConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
     "MpUserXMappingConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
     "MpUserXServerConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
@@ -117,7 +124,10 @@ obsolete_function_blocks = {
     "MpSequenceAxisConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
     "MpSequenceCommandConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
     "MpSequenceActuatorConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
-    "MpFileManagerConfig": "No longer supported since version 6.0. Use MpComConfigManager instead."
+    "MpFileManagerConfig": "No longer supported since version 6.0. Use MpComConfigManager instead.",
+    "MpDatabaseCore": "The functionality of the function block is completely replaced by MpDatabaseQuery",
+    "MpJ1939Generic": "The function block no longer exists with 6.x. The functionality of the function block is completely applied with the MpJ1939Generic configuration. The associated data types have also been removed since they are no longer required.",
+    "MpPackMLCore": "The function block was removed with 6.x. The function is completely applied with the MpPackMLStandaloneUnit configuration. The associated data types of the function block have also been removed as they are no longer required."
      # Add more function blocks as needed
 }
 
@@ -177,6 +187,12 @@ obsolete_functions = {
     "UT_sendmsg": "Supports SG3 only",   # All functions starting with UT_
     "UT_recmsg": "Supports SG3 only",   # All functions starting with UT_
     "UT_freemsg": "Supports SG3 only",   # All functions starting with UT_
+    "MpAlarmXClearHistory": "This function has been removed. Its functionality is now available as a command within the MpAlarmXHistory function block",
+    "MpAlarmXAcknowledgeAll": "This function has been removed. Its functionality is now available as a command within the MpAlarmXCore function block",
+    "MpUserXAccessRight": "The function no longer exists. The rights are handled with 6.x via OPC UA",
+    "MpAuditClearBuffer": "The function no longer exists with 6.x. The audit buffer can now be deleted using command 'Clear' in MpAuditTrail",
+    "MpComLink": "The functions were used in 5.x to create a hierarchy. With 6.0, the MpComGroup configuration can be used for this purpose",
+    "MpComLinkToParent": "The functions were used in 5.x to create a hierarchy. With 6.0, the MpComGroup configuration can be used for this purpose"
      # Add more functions as needed
 }
 
