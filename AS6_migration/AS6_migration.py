@@ -68,7 +68,10 @@ obsolete_dict = {
     "MpOee": "Temporarily removed due to low demand. The functionality of these components is currently being reviewed",
     "MpAssetInt": "Temporarily removed due to low demand. The functionality of these components is currently being reviewed - check https://github.com/br-automation-com/mappAssetIntEx",
     "BrAbbRws": "Not supported right now but might be in the future",
-    "AsDb": "This library is no longer available from operating system version AR 6.1."
+    "AsDb": "This library is no longer available from operating system version AR 6.1.",
+    "AsWndCon": "The library is not supported in Automation Studio 6.1 - check MTWinder",
+    "IotMqtt": "The library IotMqtt may be built with an obsolete version (≤ 4.73.0), which is not compatible with AS6. - You can check for an updated AS6-compatible version here: https://github.com/br-automation-com",
+    "PahoMQTT": "The library PahoMQTT may be built with an obsolete version (≤ 4.73.0), which is not compatible with AS6. - You can check for an updated AS6-compatible version here: https://github.com/br-automation-com"
 }
 
 # Libraries that must be deleted and re-added with a version >= 6.0
@@ -142,6 +145,8 @@ obsolete_function_blocks = {
     "MC_BR_SecAddShWithMov_AcpTrak": "The behavior and features of function block MC_BR_SecAddShWithMov_AcpTrak have been applied to MC_BR_SecAddShuttle_AcpTrak. As a result, MC_BR_SecAddShWithMov_AcpTrak became obsolete and was removed.",
     "MC_BR_AsmGetShuttleSel_AcpTrak": "The behavior and features of function block MC_BR_AsmGetShuttleSel_AcpTrak have been applied to MC_BR_AsmGetShuttle_AcpTrak. As a result, MC_BR_AsmGetShuttleSel_AcpTrak became obsolete and was removed.",
     "MC_BR_SecGetShuttleSel_AcpTrak": "The behavior and features of function block MC_BR_SecGetShuttleSel_AcpTrak have been applied to MC_BR_SecGetShuttle_AcpTrak. As a result, MC_BR_SecGetShuttleSel_AcpTrak became obsolete and was removed.",
+    "ArCertGenerate": "This function block is obsolete. ArCertGenerateX should be used instead of this function block.",
+    "ArCertGenerateOpcUA": "This function block is obsolete. ArCertGenerateX should be used instead of this function block."
      # Add more function blocks as needed
 }
 
@@ -399,6 +404,9 @@ unsupported_hardware = {
     ],
     "CIS - No longer supported with AS 6.x": [
         "80CIS.PS0-2", "80CIS.PS0-5"
+    ],
+    "ACOPOS P3 - No longer supported with AS 6.x - Replace with: 8EI8X8HWT10.XXXX-1 or 8EIxxxHxT1x.xxxx-1": [
+        "8EI8X8HWT10.0500-1"
     ],
     "ACOPOS - No longer supported with AS 6.x": [
         "8AC110.60-2", "8AC110.60-3", "8AC112.60-1", "8AC122.60-2", "8BAC0122.000-1", "8BAC0120.000-1", "8BVIxxxxxxxS.000-1"
@@ -936,7 +944,7 @@ def main():
                 log("The following .uad files are not located in the required Connectivity/OpcUA directory:")
                 for file_path in uad_results:
                     log(f"- {file_path}")
-                log("\nPlease create (via AS412) and move these files to the required directory: Connectivity/OpcUA.")
+                log("\nPlease create (via AS 4.12) and move these files to the required directory: Connectivity/OpcUA.")
             else:
                 log("- All .uad files are in the correct location.")
 
