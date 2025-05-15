@@ -820,6 +820,42 @@ def check_files_for_compatibility(directory, file_patterns):
 
     return incompatible_files
 
+def check_vision_settings(directory):
+    """
+    Checks for the presence of mappVision settings files in the specified directory.
+
+    Args:
+        directory (str): Path to the directory to scan.
+
+    Returns:
+        dict: Contains information about mappVision settings found:
+             - 'found': Boolean indicating if mappVision was found
+             - 'locations': List of mappVision folder paths
+             - 'total_files': Total number of files in all mappVision folders
+    """
+    vision_settings_result = {
+        'found': False,
+        'locations': [],
+        'total_files': 0
+    }
+    
+    # Walk through all directories
+    for root, dirs, files in os.walk(directory):
+        # Check if "mappVision" folder exists in current directory
+        if "mappVision" in dirs:
+            vision_path = os.path.join(root, "mappVision")
+            vision_settings_result['found'] = True
+            vision_settings_result['locations'].append(vision_path)
+            
+            # Count files in the mappVision folder and its subdirectories
+            file_count = 0
+            for sub_root, _, sub_files in os.walk(vision_path):
+                file_count += len(sub_files)
+            
+            vision_settings_result['total_files'] += file_count
+    
+    return vision_settings_result
+
 # Update main function to handle project directory input and optional debug flag
 def main():
     """
@@ -895,6 +931,8 @@ def main():
             c_include_dependency_results = scan_files_parallel(
                 os.path.join(project_path, "Logical"), [".c", ".cpp", ".hpp"], process_c_cpp_hpp_includes_file, obsolete_dict
             )
+
+            vision_settings_results = check_vision_settings(os.path.join(project_path, "Physical"))
 
             # Store the list of files containing deprecated string functions
             deprecated_string_files = check_deprecated_string_functions(
@@ -989,7 +1027,6 @@ def main():
             else:
                 log("- None")
 
-
             log("\n\nThe following invalid function blocks were found in .var and .typ files:")
             if invalid_var_typ_files:
                 for block, reason, file_path in invalid_var_typ_files:
@@ -1015,7 +1052,6 @@ def main():
                     for file in deprecated_string_files:
                         print(f"[DEBUG] - {file}")
 
-
             if found_deprecated_math:
                 log("- Deprecated AsMath functions detected in the project: Consider using AsMathToAsBrMath.py to replace them.")
                 found_any_invalid_functions = True
@@ -1026,6 +1062,16 @@ def main():
                     for file in deprecated_math_files:
                         print(f"[DEBUG] - {file}")
 
+            if vision_settings_results['total_files'] > 2:
+                log("\n\nFound vision configuration. Make sure that IP forwarding is activated under the Powerlink interface!")
+                
+                # Debug: Print detailed information about mappVision locations if debug mode is enabled
+                if debug_mode and vision_settings_results['locations']:
+                    print("\n[DEBUG] mappVision folders found at:")
+                    for location in vision_settings_results['locations']:
+                        print(f"[DEBUG] - {location}")
+                
+                found_any_invalid_functions = True
 
             if not found_any_invalid_functions:
                 log("- None")
