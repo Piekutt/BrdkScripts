@@ -856,6 +856,33 @@ def check_vision_settings(directory):
     
     return vision_settings_result
 
+def check_mappView(directory):
+    """
+    Checks for the presence of mappView settings files in the specified directory.
+
+    Args:
+        directory (str): Path to the directory to scan.
+
+    Returns:
+        dict: Contains information about mappView settings found:
+             - 'found': Boolean indicating if mappVision was found
+             - 'locations': List of mappView folder paths
+    """
+    mappView_settings_result = {
+        'found': False,
+        'locations': []
+    }
+
+    # Walk through all directories
+    for root, dirs, files in os.walk(directory):
+        # Check if "mappVision" folder exists in current directory
+        if "mappView" in dirs:
+            mappView_path = os.path.join(directory, "mappView")
+            mappView_settings_result['found'] = True
+            mappView_settings_result['locations'].append(mappView_path)
+            
+    return mappView_settings_result   
+
 # Update main function to handle project directory input and optional debug flag
 def main():
     """
@@ -933,6 +960,8 @@ def main():
             )
 
             vision_settings_results = check_vision_settings(os.path.join(project_path, "Physical"))
+
+            mappView_settings_results = check_mappView(os.path.join(project_path, "Physical"))
 
             # Store the list of files containing deprecated string functions
             deprecated_string_files = check_deprecated_string_functions(
@@ -1072,6 +1101,26 @@ def main():
                         print(f"[DEBUG] - {location}")
                 
                 found_any_invalid_functions = True
+
+            if mappView_settings_results['found']:
+                log("\n\nFound mappView configuration. Several security seetings will be enforced after the migration.")
+                log("\n- To allow access without a certificate")
+                log("  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):")
+                log("  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled")
+                log("\n- User login will be enabled by default. To allow anonymous access")
+                log("  Change the following settings in mappView configuration (Physical View/mappView/Config.mappviewcfg):")
+                log("  MappViewConfiguration->Server Configuration->Startup User: anonymous token")
+                log("\n  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):")
+                log("  ClientServerConfiguration->Security->Authentication->Authentication Methods->Anymous: Enabled")
+                log("  ClientServerConfiguration->Security->Authorization->Anonymous Access Add new user role and select \"everyone\"")
+                                    
+                # Debug: Print detailed information about mappVision locations if debug mode is enabled
+                if debug_mode and vision_settings_results['locations']:
+                    print("\n[DEBUG] mappView folders found at:")
+                    for location in vision_settings_results['locations']:
+                        print(f"[DEBUG] - {location}")
+                
+                found_any_invalid_functions = True                
 
             if not found_any_invalid_functions:
                 log("- None")
