@@ -1,6 +1,21 @@
-from flask import Flask, request, render_template, send_file, redirect, url_for, session
+import subprocess
+import sys
+import webbrowser
 import os
 import xml.etree.ElementTree as ET
+
+def install_flask():
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "flask"])
+
+try:
+    import flask
+except ImportError:
+    print("Flask not found. Installing...")
+    install_flask()
+    import flask  # Try importing again after installation
+
+
+from flask import Flask, request, render_template, send_file, redirect, url_for, session
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Required for session handling
@@ -74,4 +89,8 @@ def remove_change(index):
     return render_template('searchreplace.html', filename=session['filename'], attributes=session['attributes'], changes=changes)
 
 if __name__ == '__main__':
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        webbrowser.open("http://127.0.0.1:5000")
     app.run(debug=True)
+
+
