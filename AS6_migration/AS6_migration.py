@@ -489,14 +489,19 @@ def check_mapp_version(directory):
                     major = int(match.group(1))
                     minor = int(match.group(2))
                     version_str = f"{major}.{minor}"
-                    messages.append(f"Detected mapp Services version: {version_str}")
+                    messages.append(f"Detected Mapp Services version: {version_str}")
                     if major == 5 and minor < 20:
                         messages.append("It is recommended to use a mapp Services version 5.20 or later for the conversion.")
                         messages.append("If a mapp Services version older than 5.20 is used, the correct conversion of all configuration parameters is not guaranteed.")
                         messages.append("Please update the mapp Services version in AS4 to 5.20 or later before migrating to AS6.")
                     messages.append("The automatic mapp Services configuration upgrade is only available with mapp Services 6.0.")
-                    messages.append("Please ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions.")
-                break
+                    messages.append("Please ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions.\n")
+
+            # Check for mappMotion version 5.x
+            if "<mappMotion " in line and 'Version="5.' in line:
+                messages.append("Detected Mapp Motion version: 5.x")
+                messages.append("You must first upgrade mappMotion to version 6.0 using 'Change runtime versions' in AS6.")
+                messages.append("Once mappMotion 6.0 is set, a dialog will assist with converting all project configurations.")
 
     return messages
 
@@ -746,13 +751,13 @@ def main():
                 
                 found_any_invalid_functions = True                
 
-            log("\n\nChecking mapp Services version in project file...")
+            log("\n\nChecking mapp version in project file...")
             mapp_results = check_mapp_version(project_path)
             if mapp_version_results:
                 for msg in mapp_version_results:
                     log(f"- {msg}")
             else:
-                log("- No mapp Services version information found.")
+                log("- No mapp version information found.")
 
             end_time = time.time()
             log(f"\n\nScanning completed successfully in {end_time - start_time:.2f} seconds.")
