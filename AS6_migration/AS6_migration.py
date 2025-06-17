@@ -15,27 +15,30 @@ root_pkg_path = r"Logical\Libraries\Package.pkg"
 script_directory = Path(__file__).resolve().parent
 
 
-# initalize dictionaries containing discontinuations
-obsolete_dict = {} # obsolete libraries with reasons
-reinstall_libraries = {} # Libraries that must be deleted and re-added with a version >= 6.0
-obsolete_function_blocks = {} # list of obsolete function blocks with reasons
-obsolete_functions = {} # Hardcoded list of obsolete functions with reasons
-unsupported_hardware = {} # hardware not supported by >= 6.0
+# filens containing discontinuation information
+discontinuation_info = {
+    "obsolete_libs": {},
+    "reinstall_libs": {},
+    "obsolete_fbks": {},
+    "obsolete_funcs": {},
+    "unsupported_hw": {}
+}
 
 try:
-    for varname, filename in (
-                    ("obsolete_dict", "obsolete_libs"),
-                    ("reinstall_libraries", "reinstall_libs"),
-                    ("obsolete_function_blocks", "obsolete_fbks"),
-                    ("obsolete_functions", "obsolete_funcs"),
-                    ("unsupported_hardware", "unsupported_hw")                
-                ):
+    for filename in discontinuation_info:
         with open( f"{script_directory}/discontinuations/{filename}.json", "r") as json_file:
-            globals()[varname] = json.load(json_file)
-except BaseException as e:
+            discontinuation_info[filename]  = json.load(json_file)
+except Exception as e:
     sys.stderr.write(f"error reading discontinuation lists: {e}")
     sys.exit(1)
     
+obsolete_dict = discontinuation_info["obsolete_libs"] # obsolete libraries with reasons
+reinstall_libraries = discontinuation_info["reinstall_libs"] # Libraries that must be deleted and re-added with a version >= 6.0
+obsolete_function_blocks = discontinuation_info["obsolete_fbks"] # list of obsolete function blocks with reasons
+obsolete_functions = discontinuation_info["obsolete_funcs"] # Hardcoded list of obsolete functions with reasons
+unsupported_hardware = discontinuation_info["unsupported_hw"] # hardware not supported by >= 6.0
+    
+
 
 def display_progress(message):
     """
