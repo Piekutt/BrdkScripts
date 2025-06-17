@@ -3,9 +3,11 @@ import sys
 import re
 import concurrent.futures
 import time
-import fnmatch
+
 from pathlib import Path
 import json
+
+from checks import *
 
 
 # Path to the main package file
@@ -192,52 +194,6 @@ def process_st_c_file(file_path, patterns):
                 
     return results
 
-def check_deprecated_string_functions(root_dir, extensions, deprecated_functions):
-    """
-    Scans all .st files in the project directory for deprecated string functions.
-
-    Returns:
-        list: A list of file paths where deprecated string functions were found.
-    """
-    deprecated_files = []
-
-    for root, _, files in os.walk(root_dir):
-        for file in files:
-            if any(file.endswith(ext) for ext in extensions):
-                file_path = os.path.join(root, file)
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    content = f.read()
-                    if any(re.search(rf'\b{func}\b', content) for func in deprecated_functions):
-                        deprecated_files.append(file_path)
-
-    return deprecated_files
-
-
-def check_deprecated_math_functions(root_dir, extensions, deprecated_functions):
-    """
-    Scans files for deprecated math function calls.
-    
-    Args:
-        root_dir (str): The root directory to search in.
-        extensions (list): List of file extensions to check.
-        deprecated_functions (set): Set of deprecated math functions.
-
-    Returns:
-        list: A list of file paths where deprecated math functions were found.
-    """
-    deprecated_files = []
-    function_pattern = re.compile(r'\b(' + '|'.join(deprecated_functions) + r')\s*\(')  # Match function names only when followed by '('
-
-    for root, _, files in os.walk(root_dir):
-        for file in files:
-            if any(file.endswith(ext) for ext in extensions):
-                file_path = os.path.join(root, file)
-                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                    content = f.read()
-                    if function_pattern.search(content):  # Only matches function calls
-                        deprecated_files.append(file_path)
-
-    return deprecated_files
 
 def process_hw_file(file_path, hardware_dict):
     """
@@ -336,174 +292,6 @@ def process_reinstall_libraries(file_path, patterns):
                     results.append((library, action, file_path))
     return results
 
-def check_uad_files(root_dir):
-    """
-    Checks if .uad files are located in any directory ending with Connectivity/OpcUA.
-    Returns a list of misplaced .uad files.
-
-    Args:
-        root_dir (str): Root directory of the project.
-
-    Returns:
-        list: List of misplaced .uad file paths.
-    """
-    required_suffix = os.path.normpath(os.path.join("Connectivity", "OpcUA"))
-    misplaced_files = []
-
-    for root, _, files in os.walk(root_dir):
-        for file in files:
-            if file.endswith(".uad"):
-                current_dir = os.path.normpath(root)  # Normalize the directory path
-                # Check if the directory ends with the required suffix
-                if not current_dir.endswith(required_suffix):
-                    misplaced_files.append(os.path.join(root, file))
-
-    return misplaced_files
-
-def check_files_for_compatibility(directory, file_patterns):
-    """
-    Checks the compatibility of .apj and .hw files within a directory.
-    Validates that files have a minimum required version.
-
-    Args:
-        directory (str): Path to the directory to scan.
-        file_patterns (list): Patterns of files to check, e.g., ['*.apj', '*.hw'].
-
-    Returns:
-        list: Results for incompatible files in the format (file_path, issue).
-    """
-    incompatible_files = []
-    required_version_prefix = "4.12"
-
-    for root, _, files in os.walk(directory):
-        for file in files:
-            if any(fnmatch.fnmatch(file, pattern) for pattern in file_patterns):
-                file_path = os.path.join(root, file)
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-
-                    # Extract version info from the file header
-                    version_match = re.search(r'AutomationStudio Version="?([\d.]+)', content)
-                    if version_match:
-                        version = version_match.group(1)
-                        if not version.startswith(required_version_prefix):
-                            incompatible_files.append((file_path, f"Version {version}"))
-                    else:
-                        incompatible_files.append((file_path, "Version Unknown"))
-
-                except Exception as e:
-                    incompatible_files.append((file_path, f"Error reading file: {e}"))
-
-    return incompatible_files
-
-def check_vision_settings(directory):
-    """
-    Checks for the presence of mappVision settings files in the specified directory.
-
-    Args:
-        directory (str): Path to the directory to scan.
-
-    Returns:
-        dict: Contains information about mappVision settings found:
-             - 'found': Boolean indicating if mappVision was found
-             - 'locations': List of mappVision folder paths
-             - 'total_files': Total number of files in all mappVision folders
-    """
-    vision_settings_result = {
-        'found': False,
-        'locations': [],
-        'total_files': 0
-    }
-    
-    # Walk through all directories
-    for root, dirs, files in os.walk(directory):
-        # Check if "mappVision" folder exists in current directory
-        if "mappVision" in dirs:
-            vision_path = os.path.join(root, "mappVision")
-            vision_settings_result['found'] = True
-            vision_settings_result['locations'].append(vision_path)
-            
-            # Count files in the mappVision folder and its subdirectories
-            file_count = 0
-            for sub_root, _, sub_files in os.walk(vision_path):
-                file_count += len(sub_files)
-            
-            vision_settings_result['total_files'] += file_count
-    
-    return vision_settings_result
-
-def check_mappView(directory):
-    """
-    Checks for the presence of mappView settings files in the specified directory.
-
-    Args:
-        directory (str): Path to the directory to scan.
-
-    Returns:
-        dict: Contains information about mappView settings found:
-             - 'found': Boolean indicating if mappVision was found
-             - 'locations': List of mappView folder paths
-    """
-    mappView_settings_result = {
-        'found': False,
-        'locations': []
-    }
-
-    # Walk through all directories
-    for root, dirs, files in os.walk(directory):
-        # Check if "mappVision" folder exists in current directory
-        if "mappView" in dirs:
-            mappView_path = os.path.join(directory, "mappView")
-            mappView_settings_result['found'] = True
-            mappView_settings_result['locations'].append(mappView_path)
-            
-    return mappView_settings_result   
-
-def check_mapp_version(directory):
-    """
-    Checks for the mapp Services version in the .apj project file.
-
-    Args:
-        directory (str): Path to the project directory.
-
-    Returns:
-        list: List of warnings or information about mapp Services version.
-    """
-    messages = []
-    apj_file = None
-
-    for file in os.listdir(directory):
-        if file.endswith(".apj"):
-            apj_file = os.path.join(directory, file)
-            break
-
-    if not apj_file:
-        return messages
-
-    with open(apj_file, "r", encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            if "<mapp " in line and "Version=" in line:
-                match = re.search(r'Version="(\d+)\.(\d+)', line)
-                if match:
-                    major = int(match.group(1))
-                    minor = int(match.group(2))
-                    version_str = f"{major}.{minor}"
-                    messages.append(f"Detected Mapp Services version: {version_str}")
-                    if major == 5 and minor < 20:
-                        messages.append("It is recommended to use a mapp Services version 5.20 or later for the conversion.")
-                        messages.append("If a mapp Services version older than 5.20 is used, the correct conversion of all configuration parameters is not guaranteed.")
-                        messages.append("Please update the mapp Services version in AS4 to 5.20 or later before migrating to AS6.")
-                    messages.append("The automatic mapp Services configuration upgrade is only available with mapp Services 6.0.")
-                    messages.append("Please ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions.\n")
-
-            # Check for mappMotion version 5.x
-            if "<mappMotion " in line and 'Version="5.' in line:
-                messages.append("Detected Mapp Motion version: 5.x")
-                messages.append("You must first upgrade mappMotion to version 6.0 using 'Change runtime versions' in AS6.")
-                messages.append("Once mappMotion 6.0 is set, a dialog will assist with converting all project configurations.")
-
-    return messages
 
 
 # Update main function to handle project directory input and optional debug flag
