@@ -13,11 +13,12 @@ def calculate_file_hash(file_path):
             md5.update(chunk)
     return md5.hexdigest()
 
-def replace_functions_and_constants(file_path, function_mapping, constant_mapping):
+def replace_functions_and_constants(file_path : str, function_mapping, constant_mapping):
     """
     Replace function calls and constants in a file based on the provided mappings.
     """
     original_hash = calculate_file_hash(file_path)
+
 
     with open(file_path, "r", encoding="iso-8859-1", errors="ignore") as f:
         original_content = f.read()
@@ -26,8 +27,15 @@ def replace_functions_and_constants(file_path, function_mapping, constant_mappin
     function_replacements = 0
     constant_replacements = 0
 
+    # if file_path.endswith('ncsdcctrlInit.st'): 
+    #     modified_content, num_replacements = re.subn(r'(\s*)((?:strcpy)|(?:strcat))', r'\1brs\2', original_content)
+    #     pass
+
+
+
     # Replace function calls
     for old_func, new_func in function_mapping.items():
+ 
         pattern = rf"\b{re.escape(old_func)}\s*\("
         replacement = f"{new_func}("
         modified_content, num_replacements = re.subn(pattern, replacement, modified_content)
