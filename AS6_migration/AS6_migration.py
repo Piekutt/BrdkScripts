@@ -23,7 +23,9 @@ discontinuation_info = {
     "reinstall_libs": {},
     "obsolete_fbks": {},
     "obsolete_funcs": {},
-    "unsupported_hw": {}
+    "unsupported_hw": {},
+    "deprecated_string_functions" : {},
+    "deprecated_math_functions" : {},
 }
 
 try:
@@ -39,9 +41,10 @@ reinstall_libraries = discontinuation_info["reinstall_libs"] # Libraries that mu
 obsolete_function_blocks = discontinuation_info["obsolete_fbks"] # list of obsolete function blocks with reasons
 obsolete_functions = discontinuation_info["obsolete_funcs"] # Hardcoded list of obsolete functions with reasons
 unsupported_hardware = discontinuation_info["unsupported_hw"] # hardware not supported by >= 6.0
-    
+deprecated_string_functions = set(discontinuation_info["deprecated_string_functions"]) # deprecated string functions 8 bit and 16 bit   
+deprecated_math_functions = set(discontinuation_info["deprecated_math_functions"]) # deprecated math functions  
 
-
+pass
 def display_progress(message):
     """
     Displays a progress message on the same line in the terminal.
@@ -378,11 +381,9 @@ def main():
 
             # Store the list of files containing deprecated string functions
             deprecated_string_files = check_deprecated_string_functions(
-                os.path.join(project_path, "Logical"),
-                [".st"],
-                {"ftoa", "atof", "itoa", "atoi", "memset", "memcpy", "memmove", "memcmp",
-                "strcat", "strlen", "strcpy", "strcmp", "wcscat", "wcschr", "wcscmp",
-                "wcsconv", "wcscpy", "wcslen", "wcsncat", "wcsncmp", "wcsncpy", "wcsrchr", "wcsset"}
+                os.path.join(project_path, "Logical"), 
+                [".st"], 
+                deprecated_string_functions 
             )
 
             # Ensure we have a valid list, even if no deprecated functions are found
@@ -397,8 +398,7 @@ def main():
             deprecated_math_files = check_deprecated_math_functions(
                 os.path.join(project_path, "Logical"),
                 [".st"],
-                {"atan2", "ceil", "cosh", "floor", "fmod", "frexp", "ldexp", "modf",
-                "pow", "sinh", "tanh"}
+                deprecated_math_functions
             )
 
             # Ensure we have a valid list, even if no deprecated functions are found
